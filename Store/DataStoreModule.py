@@ -233,7 +233,7 @@ class DataStore:
         # should return DB type or something else decoupled from DB?
         return datafile_type_obj
 
-    def addToDatafiles(self, datafileName, datafileType):
+    def addToDatafilesFromREPL(self, datafileName, datafileType):
         # check in cache for datafile
         if datafileName in self.datafiles:
             return self.datafiles[datafileName]
@@ -271,7 +271,7 @@ class DataStore:
         # should return DB type or something else decoupled from DB?
         return datafile_obj
 
-    def addToPlatforms(self, platformName):
+    def addToPlatformsFromREPL(self, platformName):
         # check in cache for platform
         if platformName in self.platforms:
             return self.platforms[platformName]
@@ -413,6 +413,61 @@ class DataStore:
         self.session.flush()
 
         return sensor_obj
+
+    def addToDatafiles(self, simulated, privacy, file_type, reference=None, url=None):
+
+        privacy = self.searchPrivacy(privacy)
+        datafile_type = self.searchDatafileType(file_type)
+
+        if privacy is None or datafile_type is None:
+            print("There is missing value(s) in the data!")
+            return
+
+        entry_id = self.addToEntries(self.DBClasses.Datafile.tabletypeId,
+                                     self.DBClasses.Datafile.__tablename__)
+
+        datafile_obj = self.DBClasses.Datafile(
+            datafile_id=entry_id,
+            simulated=bool(simulated),
+            privacy_id=privacy.privacy_id,
+            datafiletype_id=datafile_type.datafiletype_id,
+            reference=reference,
+            url=url,
+        )
+
+        self.session.add(datafile_obj)
+        self.session.flush()
+
+        return datafile_obj
+
+    def addToPlatforms(self, name, nationality, platform_type, privacy):
+
+        nationality = self.searchNationality(nationality)
+        platform_type = self.searchPlatformType(platform_type)
+        privacy = self.searchPrivacy(privacy)
+
+        if nationality is None or platform_type is None or privacy is None:
+            print("There is missing value(s) in the data!")
+            return
+
+        entry_id = self.addToEntries(self.DBClasses.Platform.tabletypeId,
+                                     self.DBClasses.Platform.__tablename__)
+
+        platform_obj = self.DBClasses.Platform(
+            platform_id=entry_id,
+            name=name,
+            nationality_id=nationality.nationality_id,
+            platformtype_id=platform_type.platformtype_id,
+            privacy_id=privacy.privacy_id
+        )
+
+        self.session.add(platform_obj)
+        self.session.flush()
+
+        # add to cache and return created platform
+        self.platforms[name] = platform_obj
+        # should return DB type or something else decoupled from DB?
+        return platform_obj
 
     #############################################################
     # Search/lookup functions
@@ -614,7 +669,7 @@ class DataStore:
                 metadata_tables.append(object.__tablename__)
 
         metadata_files = [file for file in files if os.path.splitext(file)[0] in metadata_tables]
-        for file in metadata_files:
+        for file in sorted(metadata_files):
             # split file into filename and extension
             table_name, _ = os.path.splitext(file)
             possible_method = 'addTo' + table_name
