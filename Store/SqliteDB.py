@@ -72,6 +72,8 @@ class Platform(Base):
     nationality_id = Column(UUID(), nullable=False)
     # TODO: add relationships and ForeignKey entries to auto-create Entry ids
 
+    privacy_id = Column(UUID(), nullable=False)
+
 class DatafileType(Base):
     __tablename__ = 'DatafileTypes'
     tabletype = TableTypes.REFERENCE
