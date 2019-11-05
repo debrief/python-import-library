@@ -329,7 +329,7 @@ class DataStore:
         # should return DB type or something else decoupled from DB?
         return sensorTypeObj
 
-    def addToSensors(self, sensorName, platform):
+    def addToSensorsFromREPL(self, sensorName, platform):
         # check in cache for sensor
         if sensorName in self.sensors:
             return self.sensors[sensorName]
@@ -364,7 +364,7 @@ class DataStore:
         # should return DB type or something else decoupled from DB?
         return sensor_obj
 
-    def addToStates(self, timestamp, datafile, sensor, lat, long, heading, speed):
+    def addToStatesFromREPL(self, timestamp, datafile, sensor, lat, long, heading, speed):
         # No cache for entries, just add new one when called
 
         # don't know privacy, use resolver to query for data
@@ -392,6 +392,27 @@ class DataStore:
 
         return state_obj
 
+    def addToSensors(self, name, type, host):
+        sensor_type = self.searchSensorType(type)
+        host = self.searchPlatform(host)
+
+        if sensor_type is None or host is None:
+            print(f"There is missing value(s) in '{sensor_type}, {host}'!")
+            return
+
+        entry_id = self.addToEntries(self.DBClasses.Sensor.tabletypeId,
+                                     self.DBClasses.Sensor.__tablename__)
+
+        sensor_obj = self.DBClasses.Sensor(
+            sensor_id=entry_id,
+            name=name,
+            sensortype_id=sensor_type.sensortype_id,
+            platform_id=host.platform_id
+        )
+        self.session.add(sensor_obj)
+        self.session.flush()
+
+        return sensor_obj
 
     #############################################################
     # Search/lookup functions
@@ -579,7 +600,7 @@ class DataStore:
 
     def populateMetadata(self, sample_data_folder=None):
         """Import CSV files from the given folder to the realted Metadata Tables"""
-        if sample_data_folder=None:
+        if sample_data_folder is None:
             sample_data_folder = os.path.join("..", "default_data")
 
         files = os.listdir(sample_data_folder)
@@ -609,5 +630,5 @@ class DataStore:
                                 method_to_call(row=[0])
                             else:
                                 method_to_call(*row)
-             else:
+            else:
                 print(f"Method({possible_method}) not found!")
