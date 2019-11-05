@@ -36,7 +36,8 @@ class TestDataStorePopulate(TestCase):
         with self.sqlite.session_scope() as session:
             nationalities = self.sqlite.getNationalities()
             platform_types = self.sqlite.getPlatformTypes()
-            nationality_object = self.sqlite.searchNationality("UNITED KINGDOM")
+            nationality_object = self.sqlite.searchNationality(
+                "UNITED KINGDOM")
             platform_type_object = self.sqlite.searchPlatformType("TYPE-1")
 
             # Check whether they are not empty anymore and filled with correct data
@@ -84,52 +85,38 @@ class TestDataStorePopulate(TestCase):
             # compares values with the data from CSV
 
             # Platform Object: PLATFORM-1, UNITED KINGDOM, TYPE-1, PRIVACY-1
-            nationality = (
-                self.sqlite.session.query(self.sqlite.DBClasses.Nationality)
-                .filter_by(nationality_id=platform_object.nationality_id)
-                .first()
-            )
+            nationality = self.sqlite.session.query(
+                self.sqlite.DBClasses.Nationality).filter_by(
+                nationality_id=platform_object.nationality_id).first()
             self.assertEqual(nationality.name, "UNITED KINGDOM")
-            platform_type = (
-                self.sqlite.session.query(self.sqlite.DBClasses.PlatformType)
-                .filter_by(platformtype_id=platform_object.platformtype_id)
-                .first()
-            )
+            platform_type = self.sqlite.session.query(
+                self.sqlite.DBClasses.PlatformType).filter_by(
+                platformtype_id=platform_object.platformtype_id).first()
             self.assertEqual(platform_type.name, "TYPE-1")
-            privacy = (
-                self.sqlite.session.query(self.sqlite.DBClasses.Privacy)
-                .filter_by(privacy_id=platform_object.privacy_id)
-                .first()
-            )
+            privacy = self.sqlite.session.query(
+                self.sqlite.DBClasses.Privacy).filter_by(
+                privacy_id=platform_object.privacy_id).first()
             self.assertEqual(privacy.name, "PRIVACY-1")
 
             # Datafile Object: DATAFILE-1, True, PRIVACY-1, DATAFILE-TYPE-1
             self.assertEqual(datafile_object.simulated, True)
-            privacy = (
-                self.sqlite.session.query(self.sqlite.DBClasses.Privacy)
-                .filter_by(privacy_id=datafile_object.privacy_id)
-                .first()
-            )
+            privacy = self.sqlite.session.query(
+                self.sqlite.DBClasses.Privacy).filter_by(
+                privacy_id=datafile_object.privacy_id).first()
             self.assertEqual(privacy.name, "PRIVACY-1")
-            datafile_type = (
-                self.sqlite.session.query(self.sqlite.DBClasses.DatafileType)
-                .filter_by(datafiletype_id=datafile_object.datafiletype_id)
-                .first()
-            )
+            datafile_type = self.sqlite.session.query(
+                self.sqlite.DBClasses.DatafileType).filter_by(
+                datafiletype_id=datafile_object.datafiletype_id).first()
             self.assertEqual(datafile_type.name, "DATAFILE-TYPE-1")
 
             # Sensor Object: SENSOR-1, SENSOR-TYPE-1, PLATFORM-1
-            sensor_type = (
-                self.sqlite.session.query(self.sqlite.DBClasses.SensorType)
-                .filter_by(sensortype_id=sensor_object.sensortype_id)
-                .first()
-            )
+            sensor_type = self.sqlite.session.query(
+                self.sqlite.DBClasses.SensorType).filter_by(
+                sensortype_id=sensor_object.sensortype_id).first()
             self.assertEqual(sensor_type.name, "SENSOR-TYPE-1")
-            platform = (
-                self.sqlite.session.query(self.sqlite.DBClasses.Platform)
-                .filter_by(platform_id=sensor_object.platform_id)
-                .first()
-            )
+            platform = self.sqlite.session.query(
+                self.sqlite.DBClasses.Platform).filter_by(
+                platform_id=sensor_object.platform_id).first()
             self.assertEqual(platform.name, "PLATFORM-1")
 
 
