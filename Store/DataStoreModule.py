@@ -512,9 +512,17 @@ class DataStore:
     #############################################################
     # Get functions
 
+    def getDatafiles(self):
+        # get list of all datafiles in the DB
+        return self.session.query(self.DBClasses.Datafile).all()
+
     def getNationalities(self):
         # get list of all nationalities in the DB
         return self.session.query(self.DBClasses.Nationality).all()
+
+    def getPlatforms(self):
+        # get list of all platforms in the DB
+        return self.session.query(self.DBClasses.Platform).all()
 
     def getPlatformTypes(self):
         # get list of all platform types in the DB
