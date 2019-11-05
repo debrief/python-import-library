@@ -626,9 +626,6 @@ class DataStore:
                     _ = next(reader)
                     with self.session_scope() as session:
                         for row in reader:
-                            if len(row) == 1:
-                                method_to_call(row=[0])
-                            else:
-                                method_to_call(*row)
+                            method_to_call(*row)
             else:
                 print(f"Method({possible_method}) not found!")
