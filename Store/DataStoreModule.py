@@ -576,3 +576,38 @@ class DataStore:
                                 method_to_call(*row)
             else:
                 print(f"Method({possible_method}) not found!")
+
+    def populateMetadata(self, sample_data_folder=None):
+        """Import CSV files from the given folder to the realted Metadata Tables"""
+        if sample_data_folder=None:
+            sample_data_folder = os.path.join("..", "default_data")
+
+        files = os.listdir(sample_data_folder)
+
+        metadata_tables = []
+        # Create metadata table list
+        with self.session_scope() as session:
+            self.setupTabletypeMap()
+            metadata_table_objects = self.metaClasses[TableTypes.METADATA]
+            for object in list(metadata_table_objects):
+                metadata_tables.append(object.__tablename__)
+
+        metadata_files = [file for file in files if os.path.splitext(file)[0] in metadata_tables]
+        for file in metadata_files:
+            # split file into filename and extension
+            table_name, _ = os.path.splitext(file)
+            possible_method = 'addTo' + table_name
+            method_to_call = getattr(self, possible_method, None)
+            if method_to_call:
+                with open(os.path.join(sample_data_folder, file), 'r') as f:
+                    reader = csv.reader(f)
+                    # skip header
+                    _ = next(reader)
+                    with self.session_scope() as session:
+                        for row in reader:
+                            if len(row) == 1:
+                                method_to_call(row=[0])
+                            else:
+                                method_to_call(*row)
+             else:
+                print(f"Method({possible_method}) not found!")
