@@ -233,7 +233,7 @@ class DataStore:
         # should return DB type or something else decoupled from DB?
         return datafile_type_obj
 
-    def addToDatafiles(self, datafileName, datafileType):
+    def addToDatafilesFromREPL(self, datafileName, datafileType):
         # check in cache for datafile
         if datafileName in self.datafiles:
             return self.datafiles[datafileName]
@@ -271,7 +271,7 @@ class DataStore:
         # should return DB type or something else decoupled from DB?
         return datafile_obj
 
-    def addToPlatforms(self, platformName):
+    def addToPlatformsFromREPL(self, platformName):
         # check in cache for platform
         if platformName in self.platforms:
             return self.platforms[platformName]
@@ -329,7 +329,7 @@ class DataStore:
         # should return DB type or something else decoupled from DB?
         return sensorTypeObj
 
-    def addToSensors(self, sensorName, platform):
+    def addToSensorsFromREPL(self, sensorName, platform):
         # check in cache for sensor
         if sensorName in self.sensors:
             return self.sensors[sensorName]
@@ -364,7 +364,7 @@ class DataStore:
         # should return DB type or something else decoupled from DB?
         return sensor_obj
 
-    def addToStates(self, timestamp, datafile, sensor, lat, long, heading, speed):
+    def addToStatesFromREPL(self, timestamp, datafile, sensor, lat, long, heading, speed):
         # No cache for entries, just add new one when called
 
         # don't know privacy, use resolver to query for data
@@ -392,6 +392,82 @@ class DataStore:
 
         return state_obj
 
+    def addToSensors(self, name, type, host):
+        sensor_type = self.searchSensorType(type)
+        host = self.searchPlatform(host)
+
+        if sensor_type is None or host is None:
+            print(f"There is missing value(s) in '{sensor_type}, {host}'!")
+            return
+
+        entry_id = self.addToEntries(self.DBClasses.Sensor.tabletypeId,
+                                     self.DBClasses.Sensor.__tablename__)
+
+        sensor_obj = self.DBClasses.Sensor(
+            sensor_id=entry_id,
+            name=name,
+            sensortype_id=sensor_type.sensortype_id,
+            platform_id=host.platform_id
+        )
+        self.session.add(sensor_obj)
+        self.session.flush()
+
+        return sensor_obj
+
+    def addToDatafiles(self, simulated, privacy, file_type, reference=None, url=None):
+
+        privacy = self.searchPrivacy(privacy)
+        datafile_type = self.searchDatafileType(file_type)
+
+        if privacy is None or datafile_type is None:
+            print("There is missing value(s) in the data!")
+            return
+
+        entry_id = self.addToEntries(self.DBClasses.Datafile.tabletypeId,
+                                     self.DBClasses.Datafile.__tablename__)
+
+        datafile_obj = self.DBClasses.Datafile(
+            datafile_id=entry_id,
+            simulated=bool(simulated),
+            privacy_id=privacy.privacy_id,
+            datafiletype_id=datafile_type.datafiletype_id,
+            reference=reference,
+            url=url,
+        )
+
+        self.session.add(datafile_obj)
+        self.session.flush()
+
+        return datafile_obj
+
+    def addToPlatforms(self, name, nationality, platform_type, privacy):
+
+        nationality = self.searchNationality(nationality)
+        platform_type = self.searchPlatformType(platform_type)
+        privacy = self.searchPrivacy(privacy)
+
+        if nationality is None or platform_type is None or privacy is None:
+            print("There is missing value(s) in the data!")
+            return
+
+        entry_id = self.addToEntries(self.DBClasses.Platform.tabletypeId,
+                                     self.DBClasses.Platform.__tablename__)
+
+        platform_obj = self.DBClasses.Platform(
+            platform_id=entry_id,
+            name=name,
+            nationality_id=nationality.nationality_id,
+            platformtype_id=platform_type.platformtype_id,
+            privacy_id=privacy.privacy_id
+        )
+
+        self.session.add(platform_obj)
+        self.session.flush()
+
+        # add to cache and return created platform
+        self.platforms[name] = platform_obj
+        # should return DB type or something else decoupled from DB?
+        return platform_obj
 
     #############################################################
     # Search/lookup functions
@@ -436,9 +512,17 @@ class DataStore:
     #############################################################
     # Get functions
 
+    def getDatafiles(self):
+        # get list of all datafiles in the DB
+        return self.session.query(self.DBClasses.Datafile).all()
+
     def getNationalities(self):
         # get list of all nationalities in the DB
         return self.session.query(self.DBClasses.Nationality).all()
+
+    def getPlatforms(self):
+        # get list of all platforms in the DB
+        return self.session.query(self.DBClasses.Platform).all()
 
     def getPlatformTypes(self):
         # get list of all platform types in the DB
@@ -574,5 +658,37 @@ class DataStore:
                                 method_to_call(row[0])
                             else:
                                 method_to_call(*row)
+            else:
+                print(f"Method({possible_method}) not found!")
+
+    def populateMetadata(self, sample_data_folder=None):
+        """Import CSV files from the given folder to the realted Metadata Tables"""
+        if sample_data_folder is None:
+            sample_data_folder = os.path.join("..", "default_data")
+
+        files = os.listdir(sample_data_folder)
+
+        metadata_tables = []
+        # Create metadata table list
+        with self.session_scope() as session:
+            self.setupTabletypeMap()
+            metadata_table_objects = self.metaClasses[TableTypes.METADATA]
+            for object in list(metadata_table_objects):
+                metadata_tables.append(object.__tablename__)
+
+        metadata_files = [file for file in files if os.path.splitext(file)[0] in metadata_tables]
+        for file in sorted(metadata_files):
+            # split file into filename and extension
+            table_name, _ = os.path.splitext(file)
+            possible_method = 'addTo' + table_name
+            method_to_call = getattr(self, possible_method, None)
+            if method_to_call:
+                with open(os.path.join(sample_data_folder, file), 'r') as f:
+                    reader = csv.reader(f)
+                    # skip header
+                    _ = next(reader)
+                    with self.session_scope() as session:
+                        for row in reader:
+                            method_to_call(*row)
             else:
                 print(f"Method({possible_method}) not found!")

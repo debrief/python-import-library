@@ -12,8 +12,8 @@ filePath = pathlib.Path(__file__).parent.parent / "Resources/missing_platform.re
 rep = REPFile(str(filePath.absolute()))
 
 with datastore.session_scope() as session:
-    datafile = session.addToDatafiles(rep.getDatafileName(), rep.getDatafileType())
+    datafile = session.addToDatafilesFromREPL(rep.getDatafileName(), rep.getDatafileType())
     for repLine in rep.getLines():
-        platform = session.addToPlatforms(repLine.getPlatform())
+        platform = session.addToPlatformsFromREPL(repLine.getPlatform())
         sensor = session.addToSensors("GPS", platform)
-        session.addToStates(repLine.getTimestamp(), datafile, sensor, repLine.getLatitude(), repLine.getLongitude(), repLine.getHeading(), repLine.getSpeed())
+        session.addToStatesFromREPL(repLine.getTimestamp(), datafile, sensor, repLine.getLatitude(), repLine.getLongitude(), repLine.getHeading(), repLine.getSpeed())

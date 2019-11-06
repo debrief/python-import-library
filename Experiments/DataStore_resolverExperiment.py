@@ -17,10 +17,10 @@ status = DBStatus(datastore, [TableTypes.METADATA, TableTypes.REFERENCE])
 with datastore.session_scope() as session:
     stats = status.getStatus()
     status.printStatus()
-    datafile = session.addToDatafiles(rep.getDatafileName(), rep.getDatafileType())
+    datafile = session.addToDatafilesFromREPL(rep.getDatafileName(), rep.getDatafileType())
     for repLine in rep.getLines():
-        platform = session.addToPlatforms(repLine.getPlatform())
+        platform = session.addToPlatformsFromREPL(repLine.getPlatform())
         sensor = session.addToSensors("GPS", platform)
-        session.addToStates(repLine.getTimestamp(), datafile, sensor, repLine.getLatitude(), repLine.getLongitude(), repLine.getHeading(), repLine.getSpeed())
+        session.addToStatesFromREPL(repLine.getTimestamp(), datafile, sensor, repLine.getLatitude(), repLine.getLongitude(), repLine.getHeading(), repLine.getSpeed())
     status.getStatus()
     status.printStatus(prev_status=stats)
