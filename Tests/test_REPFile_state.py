@@ -2,7 +2,8 @@ import os, sys
 import unittest
 import datetime
 
-from Formats.REPFile import REPFile, REPLine
+from Formats.REPFile import REPFile
+from Formats.State import State
 from Formats.Location import Location
 
 path = os.path.abspath(__file__)
@@ -61,6 +62,7 @@ class BasicTests(unittest.TestCase):
             excep_thrown = True
 
         self.assertTrue(excep_thrown)
-   
+
+
 if __name__ == "__main__":
     unittest.main()
