@@ -1,3 +1,7 @@
+
+# DEPRECATED. 
+This project has been deprecated. Find the new home here: https://github.com/debrief/pepys-import
+
 # Code coverage
 
 We're aiming for 100% code coverage on the project, track our progress here:  [![codecov](https://codecov.io/gh/debrief/python-import-library/branch/develop/graph/badge.svg)](https://codecov.io/gh/debrief/python-import-library)
